@@ -1,5 +1,5 @@
 Grupo 3
 
-Jaider Esparza
-Jensen Rodriguez
-Darcy Rubio
+1. Jaider Esparza
+2. Jensen Rodriguez
+3. Darcy Rubio

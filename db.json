@@ -1,0 +1,31 @@
+{
+    "usuarios": [
+    {
+        "id": "1",
+        "documento": "10203040",
+        "nombre": "Juan Pérez",
+        "correo": "juan.perez@email.com"
+    },
+    {
+        "id": "2",
+        "documento": "50607080",
+        "nombre": "Maria Garcia",
+        "correo": "m.garcia@email.com"
+    },
+    {
+        "id": "3",
+        "documento": "11223344",
+        "nombre": "Carlos López",
+        "correo": "c.lopez@email.com"
+    }
+    ],
+    "tasks": [
+    {
+        "id": "1",
+        "titulo": "Comprar víveres",
+        "contenido": "Comprar leche, pan y huevos",
+        "estado": "pendiente",
+        "prioridad": "alta"
+    }
+    ]
+}

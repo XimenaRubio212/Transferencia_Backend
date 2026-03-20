@@ -1,19 +1,19 @@
-import express from 'express';
-import rutasUsuarios from './routes/user.routes.js';
-import rutasTareas   from './routes/tasks.routes.js';
-import rutasAuth     from './routes/auth.routes.js';
+import express from 'express'; // Importar el framework express para el servidor
+import rutasUsuarios from './routes/user.routes.js'; // Importar el enrutador de usuarios
+import rutasTareas   from './routes/tasks.routes.js'; // Importar el enrutador de tareas
+import rutasAuth     from './routes/auth.routes.js'; // Importar el enrutador de autenticación
 
-const app = express();
-const puerto = 3000;
+const app = express(); // Instanciar la aplicación express
+const puerto = 3000; // Asignar el número del puerto en el que correrá el servidor
 
-app.use(express.json());
+app.use(express.json()); // Habilitar el middleware para entender archivos JSON
 
-// Rutas de los módulos
-app.use('/api/auth',  rutasAuth);
-app.use('/api/users', rutasUsuarios);
-app.use('/api/tasks', rutasTareas);
+// Definición de las Rutas de los módulos
+app.use('/api/auth',  rutasAuth); // Usar las rutas de autenticación bajo el prefijo /api/auth
+app.use('/api/users', rutasUsuarios); // Usar las rutas de usuarios bajo el prefijo /api/users
+app.use('/api/tasks', rutasTareas); // Usar las rutas de tareas bajo el prefijo /api/tasks
 
 
-app.listen(puerto, () => {
-    console.log(`Servidor corriendo en http://localhost:${puerto}`);
+app.listen(puerto, () => { // Poner el servidor a escuchar en el puerto definido
+    console.log(`Servidor corriendo en http://localhost:${puerto}`); // Confirmar el inicio del servidor en la consola
 });

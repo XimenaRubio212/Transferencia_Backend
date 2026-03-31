@@ -22,13 +22,15 @@ export function obtenerTodos() { // Función para recuperar el listado completo 
 } // Fin de obtenerTodos
 
 export function obtenerPorId(id) { // Función para localizar una tarea específica por su ID
-    return tareas.find(t => t.id == id); // Busca y retorna la tarea cuyo ID coincida con el parámetro
+    // AGREGADO: Number(id) para asegurar que la comparación sea exitosa si el ID llega como texto desde la URL
+    return tareas.find(t => t.id == Number(id)); 
 } // Fin de obtenerPorId
 
 export function actualizar(id, nuevosDatos) { // Función para editar una tarea existente
     let tarea = obtenerPorId(id); // Primero intenta encontrar la tarea por su ID
     if (tarea) { // Si la tarea existe...
-        let { estado, assignedUsers, fechaCreacion, ...datosSeguros } = nuevosDatos; // Extrae datos sensibles que no deben editarse masivamente
+        // AGREGADO: Protección para que no se pueda sobrescribir el ID ni la fecha de creación original
+        let { id: _id, fechaCreacion: _fc, ...datosSeguros } = nuevosDatos; 
         Object.assign(tarea, datosSeguros); // Aplica los nuevos datos permitidos al objeto de la tarea original
         if (nuevosDatos.dueDate) tarea.fechaVencimiento = new Date(nuevosDatos.dueDate); // Actualiza la fecha de vencimiento si se proporciona una nueva
         return tarea; // Retorna el objeto de la tarea actualizado
@@ -46,7 +48,8 @@ export function actualizarEstado(id, estado) { // Función específica para camb
 } // Fin de actualizarEstado
 
 export function eliminar(id) { // Función para remover una tarea del arreglo permanente
-    let indice = tareas.findIndex(t => t.id == id); // Localiza la posición de la tarea en el arreglo
+    // AGREGADO: Number(id) para localizar correctamente el índice
+    let indice = tareas.findIndex(t => t.id == Number(id)); 
     if (indice !== -1) { // Si la tarea se encuentra en la lista...
         tareas.splice(indice, 1); // Remueve un elemento en la posición encontrada
         return true; // Indica que la eliminación fue exitosa
@@ -58,9 +61,13 @@ export function asignarUsuarios(tareaId, usuarioIds) { // Función para vincular
     let tarea = obtenerPorId(tareaId); // Obtiene la tarea por su ID
     if (!tarea) return null; // Si no existe la tarea, termina retornando nulo
 
-    usuarioIds.forEach(uid => { // Itera sobre cada ID de usuario recibido
-        if (!tarea.assignedUsers.includes(uid)) { // Verifica si el usuario ya está asignado para evitar duplicados
-            tarea.assignedUsers.push(uid); // Agrega el ID del usuario a la lista de asignados de la tarea
+    // AGREGADO: Asegurar que usuarioIds sea un arreglo para que el .forEach no falle
+    const idsFinales = Array.isArray(usuarioIds) ? usuarioIds : [usuarioIds];
+
+    idsFinales.forEach(uid => { // Itera sobre cada ID de usuario recibido
+        // AGREGADO: Number(uid) para evitar duplicados por diferencia de tipo (ej: "1" vs 1)
+        if (!tarea.assignedUsers.includes(Number(uid))) { 
+            tarea.assignedUsers.push(Number(uid)); // Agrega el ID del usuario a la lista de asignados de la tarea
         } // Fin de la verificación de duplicados
     }); // Fin del bucle forEach
     return tarea; // Retorna la tarea con la nueva lista de usuarios vinculados
@@ -76,7 +83,8 @@ export function removerUsuario(tareaId, usuarioId) { // Función para desvincula
     let tarea = obtenerPorId(tareaId); // Obtiene la tarea objetivo
     if (!tarea) return null; // Termina si la tarea no se encuentra
 
-    let indice = tarea.assignedUsers.findIndex(uid => uid == usuarioId); // Busca la posición del usuario en el arreglo de asignaciones
+    // AGREGADO: Number(usuarioId) para encontrar el índice correcto
+    let indice = tarea.assignedUsers.findIndex(uid => uid == Number(usuarioId)); 
     if (indice === -1) return false; // Retorna falso si el usuario no estaba asignado a esa tarea
 
     tarea.assignedUsers.splice(indice, 1); // Quita al usuario de la lista de asignados
@@ -96,5 +104,6 @@ export function filtrarTareasModel({ estado, prioridad, usuarioId, fechaInicio, 
 } // Fin de filtrarTareasModel
 
 export function obtenerTareasPorUsuario(usuarioId) { // Función para listar tareas creadas por un usuario específico
-    return tareas.filter(t => t.usuarioId == usuarioId); // Retorna las tareas cuyo usuarioId coincida con el solicitado
+    // AGREGADO: Number(usuarioId) para que coincida con el ID almacenado
+    return tareas.filter(t => t.usuarioId == Number(usuarioId)); 
 } // Fin de obtenerTareasPorUsuario

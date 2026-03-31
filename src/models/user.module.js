@@ -1,3 +1,6 @@
+//se importa el modelo de tareas para poder obtenelas por usuario
+import { obtenerTareasPorUsuario as obtenerTareasDesdeModeloTareas } from './tasks.module.js';
+
 let usuarios = []; // Arreglo en memoria diseñado para almacenar la colección de usuarios (simulación de DB)
 let contadorId = 1; // Contador autoincremental destinado a generar los IDs únicos de los usuarios
 

@@ -1,16 +1,16 @@
 import { Router } from 'express'; // Importar el componente Router de express para gestionar las rutas
 // Importamos los nombres actualizados del controlador de tareas para vincularlos a los endpoints
-import { 
-    crearTarea, 
-    obtenerTodasLasTareas, 
-    obtenerTareaPorId, 
-    actualizarTarea, 
-    eliminarTarea, 
-    cambiarEstadoTarea, 
-    asignarTarea, 
-    obtenerUsuariosDeTarea, 
-    removerUsuarioDeTarea, 
-    filtrarTareas 
+import {
+    crearTarea,
+    obtenerTodasLasTareas,
+    obtenerTareaPorId,
+    actualizarTarea,
+    eliminarTarea,
+    cambiarEstadoTarea,
+    asignarTarea,
+    obtenerUsuariosDeTarea,
+    removerUsuarioDeTarea,
+    filtrarTareas
 } from '../controllers/tasks.controller.js'; // Fin de la importación de controladores de tareas
 
 const router = Router(); // Crear una instancia del enrutador de express

@@ -9,7 +9,7 @@ import {
     obtenerTareasPorUsuario
 } from '../models/user.module.js'; // Importa las funciones CRUD y de consulta desde el modelo de usuarios
 
-export function crearUsuario(req, res) { // Función para registrar un nuevo usuario en la base de datos
+export async function crearUsuario(req, res) { // Función para registrar un nuevo usuario en la base de datos
     try { // Inicia bloque de seguridad para el manejo de excepciones
         let datos = req.body; // Recupera la información del usuario desde el cuerpo del mensaje HTTP
 
@@ -19,7 +19,7 @@ export function crearUsuario(req, res) { // Función para registrar un nuevo usu
             }); // Termina la respuesta con error de validación
         } // Fin del chequeo de campos obligatorios
 
-        let usuarioExistente = obtenerPorEmail(datos.email); // Busca en el modelo si ya hay alguien registrado con ese email
+        let usuarioExistente = await obtenerPorEmail(datos.email); // Busca en el modelo si ya hay alguien registrado con ese email
         if (usuarioExistente) { // Si se encuentra un registro previo con el mismo correo...
             return res.status(409).json({ // Devuelve un error 409 indicando un conflicto de datos duplicados
                 mensaje: "Ya existe un usuario con ese email" // Informa sobre la duplicidad del correo
@@ -33,7 +33,7 @@ export function crearUsuario(req, res) { // Función para registrar un nuevo usu
             }); // Cierra la respuesta de error de rol
         } // Fin de validación de roles
 
-        let resultado = crear(datos); // Procede a crear el usuario llamando a la lógica del modelo
+        let resultado = await crear(datos); // Procede a crear el usuario llamando a la lógica del modelo
         res.status(201).json({ // Envía respuesta con código 201 (Creado) al finalizar con éxito
             mensaje: "Usuario creado con éxito", // Confirmación amigable para el frontend
             data: resultado // Adjunta el objeto del usuario recién creado
@@ -46,9 +46,9 @@ export function crearUsuario(req, res) { // Función para registrar un nuevo usu
     } // Fin del bloque catch
 } // Fin de crearUsuario
 
-export function obtenerTodosLosUsuarios(req, res) { // Función para listar todos los usuarios registrados
+export async function obtenerTodosLosUsuarios(req, res) { // Función para listar todos los usuarios registrados
     try { // Intenta recuperar la lista completa
-        let datos = obtenerTodos(); // Llama al modelo para obtener el arreglo de usuarios
+        let datos = await obtenerTodos(); // Llama al modelo para obtener el arreglo de usuarios
         res.status(200).json({ // Responde con éxito y los datos obtenidos
             mensaje: "Consulta de todos los usuarios", // Título de la operación
             total: datos.length, // Indica cuántos registros se encontraron en total
@@ -62,10 +62,10 @@ export function obtenerTodosLosUsuarios(req, res) { // Función para listar todo
     } // Fin del bloque catch
 } // Fin de obtenerTodosLosUsuarios
 
-export function obtenerUsuarioPorId(req, res) { // Función para buscar un usuario específico por su identificador numérico
+export async function obtenerUsuarioPorId(req, res) { // Función para buscar un usuario específico por su identificador numérico
     try { // Proceso de búsqueda controlada
         let id = req.params.id; // Lee el ID de los parámetros de la ruta (URL)
-        let datos = obtenerPorId(id); // Consulta al modelo por el registro correspondiente a ese ID
+        let datos = await obtenerPorId(id); // Consulta al modelo por el registro correspondiente a ese ID
 
         if (!datos) { // Si el modelo devuelve nulo o indefinido (no se encontró)
             return res.status(404).json({ // Responde con el estándar 404 (No Encontrado)
@@ -85,12 +85,12 @@ export function obtenerUsuarioPorId(req, res) { // Función para buscar un usuar
     } // Fin del bloque catch
 } // Fin de obtenerUsuarioPorId
 
-export function actualizarUsuario(req, res) { // Función para modificar datos de un perfil de usuario existente
+export async function actualizarUsuario(req, res) { // Función para modificar datos de un perfil de usuario existente
     try { // Intento de actualización de datos
         let id = req.params.id; // Localiza al usuario por su ID en la URL
         let datos = req.body; // Obtiene los campos a actualizar del cuerpo de la petición
 
-        let usuarioExistente = obtenerPorId(id); // Valida primero si el usuario a editar realmente existe
+        let usuarioExistente = await obtenerPorId(id); // Valida primero si el usuario a editar realmente existe
         if (!usuarioExistente) { // Si no existe el usuario...
             return res.status(404).json({ // Devuelve error 404
                 mensaje: `No se encontró ningún usuario con ID ${id}` // Explica que no se puede editar lo que no existe
@@ -98,7 +98,7 @@ export function actualizarUsuario(req, res) { // Función para modificar datos d
         } // Fin de validación pre-edición
 
         if (datos.email) { // Si el usuario intenta cambiar su correo...
-            let usuarioConEmail = obtenerPorEmail(datos.email); // Verifica si el nuevo correo ya le pertenece a alguien más
+            let usuarioConEmail = await obtenerPorEmail(datos.email); // Verifica si el nuevo correo ya le pertenece a alguien más
             if (usuarioConEmail && usuarioConEmail.id != id) { // Si el correo existe y no es del usuario actual...
                 return res.status(409).json({ // Rebota la petición por conflicto de email duplicado
                     mensaje: "Ese email ya está en uso por otro usuario" // Mensaje de aviso de duplicidad
@@ -113,7 +113,7 @@ export function actualizarUsuario(req, res) { // Función para modificar datos d
             }); // Termina respuesta de error
         } // Fin de validación de rol en edición
 
-        let resultado = actualizar(id, datos); // Ejecuta los cambios guardándolos en el modelo
+        let resultado = await actualizar(id, datos); // Ejecuta los cambios guardándolos en el modelo
         res.status(200).json({ // Responde con confirmación de éxito
             mensaje: "Usuario actualizado con éxito", // Mensaje positivo para el cliente
             data: resultado // Muestra el estado final del usuario tras la actualización
@@ -126,10 +126,10 @@ export function actualizarUsuario(req, res) { // Función para modificar datos d
     } // Fin del bloque catch
 } // Fin de actualizarUsuario
 
-export function eliminarUsuario(req, res) { // Función para remover un usuario del sistema permanentemente
+export async function eliminarUsuario(req, res) { // Función para remover un usuario del sistema permanentemente
     try { // Lógica de borrado segura
         let id = req.params.id; // Identifica al objetivo mediante el ID en la ruta
-        let eliminado = eliminar(id); // Envía la instrucción de eliminación al modelo
+        let eliminado = await eliminar(id); // Envía la instrucción de eliminación al modelo
 
         if (!eliminado) { // Si el modelo no pudo realizar el borrado (ej: ID inexistente)
             return res.status(404).json({ // Envía un 404 al cliente
@@ -148,7 +148,7 @@ export function eliminarUsuario(req, res) { // Función para remover un usuario 
     } // Fin del bloque catch
 } // Fin de eliminarUsuario
 
-export function actualizarEstadoUsuario(req, res) { // Función para activar o desactivar una cuenta de usuario
+export async function actualizarEstadoUsuario(req, res) { // Función para activar o desactivar una cuenta de usuario
     try { // Intento de cambio de estado (activo/inactivo)
         let id = req.params.id; // Lee el ID del usuario de la URL
         let { estado } = req.body; // Toma el nuevo estado del cuerpo del JSON enviado
@@ -160,7 +160,7 @@ export function actualizarEstadoUsuario(req, res) { // Función para activar o d
             }); // Cierra respuesta de error de validación
         } // Fin de validación de estados
 
-        let resultado = actualizarEstado(id, estado); // Ejecuta el cambio de estado en el modelo
+        let resultado = await actualizarEstado(id, estado); // Ejecuta el cambio de estado en el modelo
 
         if (!resultado) { // Si no se encuentra al usuario para cambiarle el estado
             return res.status(404).json({ // Responde indicando que el usuario no existe
@@ -180,18 +180,18 @@ export function actualizarEstadoUsuario(req, res) { // Función para activar o d
     } // Fin del bloque catch
 } // Fin de actualizarEstadoUsuario
 
-export function verTareasPorUsuario(req, res) { // Función para listar todas las tareas asociadas a un usuario específico
+export async function verTareasPorUsuario(req, res) { // Función para listar todas las tareas asociadas a un usuario específico
     try { // Inicia consulta de relación usuario-tareas
         let usuarioId = req.params.userId; // Toma el ID del usuario desde la ruta dinámica
 
-        let usuario = obtenerPorId(usuarioId); // Primero verifica si el usuario en cuestión existe legalmente
+        let usuario = await obtenerPorId(usuarioId); // Primero verifica si el usuario en cuestión existe legalmente
         if (!usuario) { // Si no existe el usuario solicitado...
             return res.status(404).json({ // Error 404 inmediato
                 mensaje: `No se encontró ningún usuario con ID ${usuarioId}` // Informa que el usuario no está registrado
             }); // Finaliza petición fallida
         } // Fin de validación de pertenencia
 
-        let tareas = obtenerTareasPorUsuario(usuarioId); // Pide al modelo las tareas relacionadas con dicho usuario
+        let tareas = await obtenerTareasPorUsuario(usuarioId); // Pide al modelo las tareas relacionadas con dicho usuario
         res.status(200).json({ // Responde con el listado de tareas vinculadas
             mensaje: `Tareas del usuario "${usuario.nombre || usuario.name}"`, // Referencia el nombre del usuario para mayor claridad
             total: tareas.length, // Indica cuántas tareas tiene bajo su responsabilidad

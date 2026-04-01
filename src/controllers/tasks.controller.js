@@ -11,10 +11,10 @@ import {
     filtrarTareasModel 
 } from '../models/tasks.module.js'; // Importación de todas las funciones necesarias desde el modelo de tareas para interactuar con los datos
 
-export function crearTarea(req, res) { // Función para crear una nueva tarea en el sistema
+export async function crearTarea(req, res) { // Función para crear una nueva tarea en el sistema
     try { // Bloque para capturar errores durante la creación
         let datos = req.body; // Obtiene la información de la tarea desde el cuerpo de la solicitud
-        let resultado = crear(datos); // Llama al modelo para guardar la nueva tarea
+        let resultado = await crear(datos); // Llama al modelo para guardar la nueva tarea
         res.status(201).json({ // Responde con éxito (creado) y los datos de la tarea
             mensaje: "Tarea creada con éxito", // Confirmación para el usuario
             data: resultado // Datos de la tarea recién creada
@@ -27,9 +27,9 @@ export function crearTarea(req, res) { // Función para crear una nueva tarea en
     } // Fin del bloque catch
 } // Fin de crearTarea
 
-export function obtenerTodasLasTareas(req, res) { // Función para listar todas las tareas existentes
+export async function obtenerTodasLasTareas(req, res) { // Función para listar todas las tareas existentes
     try { // Intenta realizar la consulta a la base de datos (o modelo)
-        let datos = obtenerTodos(); // Recupera el arreglo de todas las tareas del modelo
+        let datos = await obtenerTodos(); // Recupera el arreglo de todas las tareas del modelo
         res.status(200).json({ // Envía respuesta exitosa con los datos encontrados
             mensaje: "Consulta de todas las tareas", // Descripción de la acción realizada
             total: datos.length, // Indica la cantidad total de tareas encontradas
@@ -43,10 +43,17 @@ export function obtenerTodasLasTareas(req, res) { // Función para listar todas 
     } // Fin del bloque catch
 } // Fin de obtenerTodasLasTareas
 
-export function obtenerTareaPorId(req, res) { // Función para buscar una tarea específica mediante su ID
+export async function obtenerTareaPorId(req, res) { // Función para buscar una tarea específica mediante su ID
     try { // Inicio del control de errores
         let id = req.params.id; // Extrae el ID de la tarea desde los parámetros de la URL
-        let datos = obtenerPorId(id); // Solicita al modelo la tarea que coincida con ese ID
+        let datos = await obtenerPorId(id); // Solicita al modelo la tarea que coincida con ese ID
+        
+        if (!datos) {
+            return res.status(404).json({
+                mensaje: `No se encontró ninguna tarea con ID ${id}`
+            });
+        }
+
         res.status(200).json({ // Envía la respuesta con la tarea encontrada
             mensaje: "Consulta por ID, ¡Exitosa!", // Mensaje de éxito
             data: datos // Información de la tarea consultada
@@ -59,11 +66,11 @@ export function obtenerTareaPorId(req, res) { // Función para buscar una tarea 
     } // Fin del bloque catch
 } // Fin de obtenerTareaPorId
 
-export function actualizarTarea(req, res) { // Función para modificar los datos de una tarea existente
+export async function actualizarTarea(req, res) { // Función para modificar los datos de una tarea existente
     try { // Intenta aplicar los cambios
         let id = req.params.id; // Obtiene el ID de la tarea a modificar de la URL
         let datos = req.body; // Toma los nuevos datos del cuerpo de la solicitud
-        let resultado = actualizar(id, datos); // Ejecuta la actualización en el modelo
+        let resultado = await actualizar(id, datos); // Ejecuta la actualización en el modelo
         res.status(200).json({ // Responde confirmando el éxito de la operación
             mensaje: "Tarea actualizada con éxito", // Mensaje para el cliente
             data: resultado // Muestra cómo quedó la tarea tras los cambios
@@ -76,10 +83,10 @@ export function actualizarTarea(req, res) { // Función para modificar los datos
     } // Fin del bloque catch
 } // Fin de actualizarTarea
 
-export function eliminarTarea(req, res) { // Función para borrar definitivamente una tarea por su ID
+export async function eliminarTarea(req, res) { // Función para borrar definitivamente una tarea por su ID
     try { // Inicio de la lógica de eliminación
         let id = req.params.id; // Lee el identificador de la tarea desde la ruta
-        eliminar(id); // Ordena al modelo que remueva la tarea correspondiente
+        await eliminar(id); // Ordena al modelo que remueva la tarea correspondiente
         res.status(200).json({ // Envía confirmación de que se eliminó correctamente
             mensaje: "Tarea eliminada con éxito" // Texto informativo para el usuario
         }); // Cierra respuesta exitosa
@@ -91,11 +98,11 @@ export function eliminarTarea(req, res) { // Función para borrar definitivament
     } // Fin del bloque catch
 } // Fin de eliminarTarea
 
-export function cambiarEstadoTarea(req, res) { // Función para actualizar exclusivamente el estado (status) de una tarea
+export async function cambiarEstadoTarea(req, res) { // Función para actualizar exclusivamente el estado (status) de una tarea
     try { // Intenta cambiar el estado
         let id = req.params.id; // Identifica la tarea a través de su ID en la URL
         let { estado } = req.body; // Obtiene el nuevo valor del estado del cuerpo de la petición
-        let resultado = actualizarEstado(id, estado); // Llama al modelo para que actualice solo el campo de estado
+        let resultado = await actualizarEstado(id, estado); // Llama al modelo para que actualice solo el campo de estado
         res.status(200).json({ // Envía respuesta con el nuevo estado aplicado
             mensaje: "Estado actualizado con éxito", // Mensaje de éxito específico
             data: resultado // Datos de la tarea actualizada
@@ -108,11 +115,11 @@ export function cambiarEstadoTarea(req, res) { // Función para actualizar exclu
     } // Fin del bloque catch
 } // Fin de cambiarEstadoTarea
 
-export function asignarTarea(req, res) { // Función para asignar uno o varios usuarios a una tarea determinada
+export async function asignarTarea(req, res) { // Función para asignar uno o varios usuarios a una tarea determinada
     try { // Inicia bloque de asignación
         let tareaId = req.params.taskId; // Obtiene el ID de la tarea desde los parámetros de ruta
         let { usuarioIds } = req.body; // Lee el listado de IDs de usuario del cuerpo de la solicitud
-        let resultado = asignarUsuarios(tareaId, usuarioIds); // Ejecuta la vinculación en el modelo
+        let resultado = await asignarUsuarios(tareaId, usuarioIds); // Ejecuta la vinculación en el modelo
         res.status(200).json({ // Responde con éxito tras asignar
             mensaje: "Usuarios asignados con éxito", // Confirmación al usuario
             data: resultado // Muestra la relación tarea-usuario actualizada
@@ -125,10 +132,10 @@ export function asignarTarea(req, res) { // Función para asignar uno o varios u
     } // Fin del bloque catch
 } // Fin de asignarTarea
 
-export function obtenerUsuariosDeTarea(req, res) { // Función para ver quiénes están trabajando en una tarea
+export async function obtenerUsuariosDeTarea(req, res) { // Función para ver quiénes están trabajando en una tarea
     try { // Intenta obtener el listado de usuarios
         let tareaId = req.params.taskId; // Identifica la tarea por su ID en los parámetros
-        let usuarios = obtenerUsuariosAsignados(tareaId); // Pide al modelo los usuarios relacionados a esa tarea
+        let usuarios = await obtenerUsuariosAsignados(tareaId); // Pide al modelo los usuarios relacionados a esa tarea
         res.status(200).json({ // Envía el listado de usuarios vinculados
             mensaje: `Usuarios asignados a la tarea ${tareaId}`, // Texto dinámico informativo
             total: usuarios.length, // Conteo de personas asignadas
@@ -142,10 +149,10 @@ export function obtenerUsuariosDeTarea(req, res) { // Función para ver quiénes
     } // Fin del bloque catch
 } // Fin de obtenerUsuariosDeTarea
 
-export function removerUsuarioDeTarea(req, res) { // Función para quitar a un usuario de su asignación en una tarea
+export async function removerUsuarioDeTarea(req, res) { // Función para quitar a un usuario de su asignación en una tarea
     try { // Iniciar proceso de remoción
         let { taskId, userId } = req.params; // Extrae tanto el ID de la tarea como el del usuario de la URL
-        removerUsuario(taskId, userId); // Pide al modelo romper la vinculación entre ambos parámetros
+        await removerUsuario(taskId, userId); // Pide al modelo romper la vinculación entre ambos parámetros
         res.status(200).json({ // Confirmación de remoción completada
             mensaje: `Usuario ${userId} removido de la tarea ${taskId} con éxito` // Mensaje de éxito claro
         }); // Fin de respuesta
@@ -157,10 +164,10 @@ export function removerUsuarioDeTarea(req, res) { // Función para quitar a un u
     } // Fin del bloque catch
 } // Fin de removerUsuarioDeTarea
 
-export function filtrarTareas(req, res) { // Función para buscar tareas aplicando múltiples filtros dinámicos (estado, prioridad, etc.)
+export async function filtrarTareas(req, res) { // Función para buscar tareas aplicando múltiples filtros dinámicos (estado, prioridad, etc.)
     try { // Ejecución de búsqueda filtrada
         let { estado, prioridad, usuarioId, fechaInicio, fechaFin } = req.query; // Recupera los criterios de búsqueda de la cadena de consulta (query string)
-        let datos = filtrarTareasModel({ status: estado, priority: prioridad, userId: usuarioId, startDate: fechaInicio, endDate: fechaFin }); // Llama al buscador del modelo con los parámetros recibidos
+        let datos = await filtrarTareasModel({ estado, prioridad, usuarioId }); // Llama al buscador del modelo con los parámetros recibidos
         res.status(200).json({ // Devuelve los resultados parciales que coincidan
             mensaje: "Filtro aplicado con éxito", // Mensaje de confirmación del filtro
             total: datos.length, // Número de coincidencias encontradas

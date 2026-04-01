@@ -8,7 +8,7 @@ Este proyecto es una API REST construida con Node.js y Express para la gestión 
 ## Arquitectura del Proyecto
 El proyecto sigue una arquitectura de capas clara:
 - **Controladores (`src/controllers/`):** Contienen la lógica de manejo de peticiones y respuestas HTTP.
-- **Modelos (`src/models/`):** Encargados de la gestión de los datos (actualmente almacenados en memoria).
+- **Modelos (`src/models/`):** Encargados de la gestión de los datos mediante consultas SQL a una base de datos MySQL.
 - **Rutas (`src/routes/`):** Definen los puntos de acceso (endpoints) de la API.
 - **Punto de Entrada (`src/app.js`):** Configura el servidor Express y une todas las piezas.
 
@@ -16,12 +16,11 @@ El proyecto sigue una arquitectura de capas clara:
 - **Node.js**: Entorno de ejecución para JavaScript.
 - **Express**: Framework para la creación de aplicaciones web y APIs.
 - **JavaScript (ES Modules)**: Lenguaje de programación principal.
+- **MySQL**: Motor de base de datos para el almacenamiento persistente.
+- **mysql2**: Driver para la conexión y ejecución de consultas asíncronas.
 
 ## Endpoints Principales
 
-### Autenticación
-- `POST /api/auth/login`: Inicia sesión y devuelve un token simulado.
-  - **Body esperado:** `{ "email": "admin@email.com", "password": "admin123" }`
 
 ### Usuarios
 - `GET /api/users`: Lista todos los usuarios.
@@ -29,7 +28,7 @@ El proyecto sigue una arquitectura de capas clara:
   - **Body esperado:** `{ "nombre": "Juan", "email": "juan@mail.com", "rol": "user" }`
 - `GET /api/users/:id`: Obtiene un usuario por su ID.
 - `PUT /api/users/:id`: Actualiza los datos de un usuario.
-  - **Body esperado:** `{ "nombre": "Juan Perez" }`
+  - **Body esperado:** `{ "nombre": "Juan Perez", "email": "juan@mail.com", "documento": "123" }`
 - `DELETE /api/users/:id`: Elimina un usuario.
 - `PATCH /api/users/:id/status`: Cambia el estado (activo/inactivo) de un usuario.
   - **Body esperado:** `{ "estado": "inactive" }`
@@ -49,6 +48,11 @@ El proyecto sigue una arquitectura de capas clara:
   - **Body esperado:** `{ "usuarioIds": [1, 2] }`
 - `GET /api/tasks/:taskId/users`: Lista los usuarios asignados a una tarea.
 - `GET /api/tasks/filter`: Filtra tareas por estado, prioridad, usuario o fecha.
+
+### Mejoras en la Persistencia (SQL)
+- **Integridad Referencial:** Se han implementado claves foráneas para asegurar que las tareas pertenezcan a usuarios válidos.
+- **Prevención de Errores:** En la creación/actualización de tareas, si un `userId` no existe, el sistema lo trata como `null` para evitar errores de restricción y mantener la estabilidad.
+- **Relaciones Muchos a Muchos:** El sistema permite asignar múltiples usuarios a una sola tarea mediante la tabla intermedia `task_users`.
 
 ## Instrucciones de Uso
 

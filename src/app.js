@@ -6,7 +6,6 @@ import './config/db.js'; // Importar la configuración de la base de datos para 
 // Importación de los enrutadores de los módulos
 import rutasUsuarios from './routes/user.routes.js'; 
 import rutasTareas   from './routes/tasks.routes.js'; 
-import rutasAuth     from './routes/auth.routes.js'; 
 
 const app = express(); // Instanciar la aplicación express
 
@@ -23,7 +22,6 @@ const puerto = process.env.PORT || 3000;
 
 // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
 
-app.use('/api/auth',   rutasAuth);    // Rutas de autenticación (Login/Registro)
 app.use('/api/users',  rutasUsuarios); // Rutas de gestión de usuarios
 app.use('/api/tasks',  rutasTareas);   // Rutas de gestión de tareas (Task Manager)
 

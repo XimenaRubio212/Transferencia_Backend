@@ -1,109 +1,93 @@
-let tareas = []; // Arreglo en memoria para almacenar todas las tareas (simulación de base de datos)
-let contadorId = 1; // Contador autoincremental para asignar IDs únicos a cada nueva tarea
+import pool from '../config/db.js'; // Importa el acceso a la base de datos MySQL
 
-export function crear(datos) { // Función para instanciar y guardar una nueva tarea
-    let nuevaTarea = { // Definición de la estructura del objeto de tarea
-        id: contadorId++, // Asigna el ID actual e incrementa el contador para la siguiente tarea
-        titulo: datos.title, // Título de la tarea obtenido de los datos de entrada
-        descripcion: datos.description || "", // Descripción opcional (vacía por defecto)
-        estado: "pending", // Estado inicial de cualquier tarea nueva: "pendiente"
-        prioridad: datos.priority || "medio", // Nivel de prioridad (medio por defecto)
-        assignedUsers: datos.assignedUsers || [], // Lista de IDs de usuarios asignados a esta tarea
-        fechaCreacion: new Date(), // Registra la fecha y hora exacta de creación
-        fechaVencimiento: datos.dueDate ? new Date(datos.dueDate) : null, // Convierte la fecha de vencimiento a objeto Date o nulo
-        usuarioId: datos.userId || null, // ID del usuario creador o responsable principal
-    }; // Fin de la definición del objeto nuevaTarea
-    tareas.push(nuevaTarea); // Agrega la tarea recién creada al arreglo principal
-    return nuevaTarea; // Devuelve el objeto de la tarea creada para confirmación
-} // Fin de la función crear
+// Función asíncrona para guardar una nueva tarea en SQL
+export async function crear(datos) {
+    const { title, description, priority, dueDate, userId } = datos;
+    
+    let finalUserId = (userId && userId !== "") ? userId : null;
 
-export function obtenerTodos() { // Función para recuperar el listado completo de tareas
-    return tareas; // Retorna el arreglo con todas las tareas existentes
-} // Fin de obtenerTodos
+    if (finalUserId) { // Verifica existencia del usuario
+        const [user] = await pool.query('SELECT id FROM users WHERE id = ?', [finalUserId]);
+        if (user.length === 0) finalUserId = null;
+    }
 
-export function obtenerPorId(id) { // Función para localizar una tarea específica por su ID
-    // AGREGADO: Number(id) para asegurar que la comparación sea exitosa si el ID llega como texto desde la URL
-    return tareas.find(t => t.id == Number(id)); 
-} // Fin de obtenerPorId
+    const [result] = await pool.query( // Inserta según el esquema definitivo
+        'INSERT INTO tasks (title, description, priority, dueDate, userId) VALUES (?, ?, ?, ?, ?)',
+        [title, description || "", priority || "medio", dueDate ? new Date(dueDate) : null, finalUserId]
+    );
+    return { id: result.insertId, ...datos };
+}
 
-export function actualizar(id, nuevosDatos) { // Función para editar una tarea existente
-    let tarea = obtenerPorId(id); // Primero intenta encontrar la tarea por su ID
-    if (tarea) { // Si la tarea existe...
-        // AGREGADO: Protección para que no se pueda sobrescribir el ID ni la fecha de creación original
-        let { id: _id, fechaCreacion: _fc, ...datosSeguros } = nuevosDatos; 
-        Object.assign(tarea, datosSeguros); // Aplica los nuevos datos permitidos al objeto de la tarea original
-        if (nuevosDatos.dueDate) tarea.fechaVencimiento = new Date(nuevosDatos.dueDate); // Actualiza la fecha de vencimiento si se proporciona una nueva
-        return tarea; // Retorna el objeto de la tarea actualizado
-    } // Fin del bloque si la tarea existe
-    return null; // Si no se encuentra la tarea, retorna nulo
-} // Fin de actualizar
+// Función asíncrona para recuperar todas las tareas
+export async function obtenerTodos() {
+    const [rows] = await pool.query('SELECT * FROM tasks');
+    return rows;
+}
 
-export function actualizarEstado(id, estado) { // Función específica para cambiar únicamente el estado de una tarea
-    let tarea = obtenerPorId(id); // Busca la tarea objetivo
-    if (tarea) { // Si la encuentra...
-        tarea.estado = estado; // Cambia el valor del campo estado por el nuevo valor recibido
-        return tarea; // Retorna la tarea con el nuevo estado
-    } // Fin del bloque si existe la tarea
-    return null; // Retorna nulo si no se localiza la tarea
-} // Fin de actualizarEstado
+// Función asíncrona para localizar una tarea por ID
+export async function obtenerPorId(id) {
+    const [rows] = await pool.query('SELECT * FROM tasks WHERE id = ?', [id]);
+    return rows[0] || null;
+}
 
-export function eliminar(id) { // Función para remover una tarea del arreglo permanente
-    // AGREGADO: Number(id) para localizar correctamente el índice
-    let indice = tareas.findIndex(t => t.id == Number(id)); 
-    if (indice !== -1) { // Si la tarea se encuentra en la lista...
-        tareas.splice(indice, 1); // Remueve un elemento en la posición encontrada
-        return true; // Indica que la eliminación fue exitosa
-    } // Fin del bloque si se encuentra
-    return false; // Indica que no se pudo eliminar (ID no encontrado)
-} // Fin de eliminar
+// Función asíncrona para editar los campos de una tarea
+export async function actualizar(id, datos) {
+    const { title, description, priority, dueDate, userId } = datos;
 
-export function asignarUsuarios(tareaId, usuarioIds) { // Función para vincular múltiples usuarios a una tarea
-    let tarea = obtenerPorId(tareaId); // Obtiene la tarea por su ID
-    if (!tarea) return null; // Si no existe la tarea, termina retornando nulo
+    let finalUserId = (userId && userId !== "") ? userId : undefined;
 
-    // AGREGADO: Asegurar que usuarioIds sea un arreglo para que el .forEach no falle
-    const idsFinales = Array.isArray(usuarioIds) ? usuarioIds : [usuarioIds];
+    if (finalUserId) {
+        const [user] = await pool.query('SELECT id FROM users WHERE id = ?', [finalUserId]);
+        if (user.length === 0) finalUserId = null;
+    } else if (userId === null || userId === "") {
+        finalUserId = null;
+    }
+    
+    await pool.query(
+        'UPDATE tasks SET title=?, description=?, priority=?, dueDate=?, userId=? WHERE id=?',
+        [title, description, priority, dueDate ? new Date(dueDate) : null, finalUserId, id]
+    );
+    return obtenerPorId(id);
+}
 
-    idsFinales.forEach(uid => { // Itera sobre cada ID de usuario recibido
-        // AGREGADO: Number(uid) para evitar duplicados por diferencia de tipo (ej: "1" vs 1)
-        if (!tarea.assignedUsers.includes(Number(uid))) { 
-            tarea.assignedUsers.push(Number(uid)); // Agrega el ID del usuario a la lista de asignados de la tarea
-        } // Fin de la verificación de duplicados
-    }); // Fin del bucle forEach
-    return tarea; // Retorna la tarea con la nueva lista de usuarios vinculados
-} // Fin de asignarUsuarios
+// Función asíncrona para cambiar el estado de una tarea
+export async function actualizarEstado(id, estado) {
+    await pool.query('UPDATE tasks SET estado=? WHERE id=?', [estado, id]);
+    return obtenerPorId(id);
+}
 
-export function obtenerUsuariosAsignados(tareaId) { // Función para consultar quiénes están asignados a una tarea
-    let tarea = obtenerPorId(tareaId); // Busca la tarea correspondiente
-    if (!tarea) return null; // Retorna nulo si la tarea no existe
-    return tarea.assignedUsers; // Retorna el arreglo de IDs de usuarios asignados
-} // Fin de obtenerUsuariosAsignados
+// Función asíncrona para eliminar una tarea
+export async function eliminar(id) {
+    const [result] = await pool.query('DELETE FROM tasks WHERE id=?', [id]);
+    return result.affectedRows > 0;
+}
 
-export function removerUsuario(tareaId, usuarioId) { // Función para desvincular a un usuario específico de una tarea
-    let tarea = obtenerPorId(tareaId); // Obtiene la tarea objetivo
-    if (!tarea) return null; // Termina si la tarea no se encuentra
+// NOTA: Se eliminaron las funciones de asignarUsuarios (muchos a muchos) al no estar presente la tabla intermedia en el esquema actual.
 
-    // AGREGADO: Number(usuarioId) para encontrar el índice correcto
-    let indice = tarea.assignedUsers.findIndex(uid => uid == Number(usuarioId)); 
-    if (indice === -1) return false; // Retorna falso si el usuario no estaba asignado a esa tarea
+// Función asíncrona para listar tareas de un usuario específico
+export async function obtenerTareasPorUsuario(userId) {
+    const [rows] = await pool.query('SELECT * FROM tasks WHERE userId=?', [userId]);
+    return rows;
+}
 
-    tarea.assignedUsers.splice(indice, 1); // Quita al usuario de la lista de asignados
-    return true; // Confirma que la remoción fue exitosa
-} // Fin de removerUsuario
+// Función asíncrona de búsqueda avanzada con filtros
+export async function filtrarTareasModel({ estado, prioridad, usuarioId }) {
+    let query = 'SELECT * FROM tasks WHERE 1=1';
+    const params = [];
 
-export function filtrarTareasModel({ estado, prioridad, usuarioId, fechaInicio, fechaFin }) { // Función de búsqueda avanzada con filtros múltiples
-    let resultado = [...tareas]; // Crea una copia de la lista de tareas para no afectar la original durante el filtrado
+    if (estado !== undefined && estado !== null) {
+        query += ' AND estado = ?';
+        params.push(estado);
+    }
+    if (prioridad !== undefined && prioridad !== null) {
+        query += ' AND priority = ?';
+        params.push(prioridad);
+    }
+    if (usuarioId !== undefined && usuarioId !== null) {
+        query += ' AND userId = ?';
+        params.push(usuarioId);
+    }
 
-    if (estado)      resultado = resultado.filter(t => t.estado === estado); // Filtra por estado si se proporciona el parámetro
-    if (prioridad)   resultado = resultado.filter(t => t.prioridad === prioridad); // Filtra por prioridad si se recibe el valor
-    if (usuarioId)   resultado = resultado.filter(t => t.assignedUsers.includes(Number(usuarioId))); // Filtra tareas donde el usuario está asignado
-    if (fechaInicio) resultado = resultado.filter(t => t.fechaCreacion >= new Date(fechaInicio)); // Filtra por fecha de creación mínima
-    if (fechaFin)    resultado = resultado.filter(t => t.fechaCreacion <= new Date(fechaFin)); // Filtra por fecha de creación máxima
-
-    return resultado; // Retorna la lista de tareas que cumplen con todos los criterios aplicados
-} // Fin de filtrarTareasModel
-
-export function obtenerTareasPorUsuario(usuarioId) { // Función para listar tareas creadas por un usuario específico
-    // AGREGADO: Number(usuarioId) para que coincida con el ID almacenado
-    return tareas.filter(t => t.usuarioId == Number(usuarioId)); 
-} // Fin de obtenerTareasPorUsuario
+    const [rows] = await pool.query(query, params);
+    return rows;
+}

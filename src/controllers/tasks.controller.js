@@ -166,7 +166,7 @@ export async function removerUsuarioDeTarea(req, res) { // Función para quitar 
 
 export async function filtrarTareas(req, res) { // Función para buscar tareas aplicando múltiples filtros dinámicos (estado, prioridad, etc.)
     try { // Ejecución de búsqueda filtrada
-        let { estado, prioridad, usuarioId, fechaInicio, fechaFin } = req.query; // Recupera los criterios de búsqueda de la cadena de consulta (query string)
+        let { estado, prioridad, usuarioId } = req.query; // Recupera los criterios de búsqueda de la cadena de consulta (query string)
         let datos = await filtrarTareasModel({ estado, prioridad, usuarioId }); // Llama al buscador del modelo con los parámetros recibidos
         res.status(200).json({ // Devuelve los resultados parciales que coincidan
             mensaje: "Filtro aplicado con éxito", // Mensaje de confirmación del filtro

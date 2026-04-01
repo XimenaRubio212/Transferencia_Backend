@@ -5,9 +5,6 @@ import {
     actualizar, 
     actualizarEstado, 
     eliminar, 
-    asignarUsuarios, 
-    obtenerUsuariosAsignados, 
-    removerUsuario, 
     filtrarTareasModel 
 } from '../models/tasks.module.js'; // Importación de todas las funciones necesarias desde el modelo de tareas para interactuar con los datos
 
@@ -71,7 +68,7 @@ export async function actualizarTarea(req, res) { // Función para modificar los
         let id = req.params.id; // Obtiene el ID de la tarea a modificar de la URL
         let datos = req.body; // Toma los nuevos datos del cuerpo de la solicitud
         let resultado = await actualizar(id, datos); // Ejecuta la actualización en el modelo
-        res.status(200).json({ // Responde confirmando el éxito de la operación
+        res.status(200).json({ // Responde con confirmación de éxito de la operación
             mensaje: "Tarea actualizada con éxito", // Mensaje para el cliente
             data: resultado // Muestra cómo quedó la tarea tras los cambios
         }); // Cierra la respuesta satisfactoria
@@ -114,55 +111,6 @@ export async function cambiarEstadoTarea(req, res) { // Función para actualizar
         }); // Fin de respuesta de error
     } // Fin del bloque catch
 } // Fin de cambiarEstadoTarea
-
-export async function asignarTarea(req, res) { // Función para asignar uno o varios usuarios a una tarea determinada
-    try { // Inicia bloque de asignación
-        let tareaId = req.params.taskId; // Obtiene el ID de la tarea desde los parámetros de ruta
-        let { usuarioIds } = req.body; // Lee el listado de IDs de usuario del cuerpo de la solicitud
-        let resultado = await asignarUsuarios(tareaId, usuarioIds); // Ejecuta la vinculación en el modelo
-        res.status(200).json({ // Responde con éxito tras asignar
-            mensaje: "Usuarios asignados con éxito", // Confirmación al usuario
-            data: resultado // Muestra la relación tarea-usuario actualizada
-        }); // Fin de respuesta
-    } catch (error) { // Si algo sale mal en la asignación
-        res.status(500).json({ // Reporta error 500
-            mensaje: "Error en el servidor", // Mensaje clave
-            error: error.message // Razón del fallo
-        }); // Cierra el flujo de respuesta de error
-    } // Fin del bloque catch
-} // Fin de asignarTarea
-
-export async function obtenerUsuariosDeTarea(req, res) { // Función para ver quiénes están trabajando en una tarea
-    try { // Intenta obtener el listado de usuarios
-        let tareaId = req.params.taskId; // Identifica la tarea por su ID en los parámetros
-        let usuarios = await obtenerUsuariosAsignados(tareaId); // Pide al modelo los usuarios relacionados a esa tarea
-        res.status(200).json({ // Envía el listado de usuarios vinculados
-            mensaje: `Usuarios asignados a la tarea ${tareaId}`, // Texto dinámico informativo
-            total: usuarios.length, // Conteo de personas asignadas
-            data: usuarios // Lista detallada de usuarios
-        }); // Cierra respuesta exitosa
-    } catch (error) { // Errores en la consulta de asignaciones
-        res.status(500).json({ // Respuesta de error interno
-            mensaje: "Error en el servidor", // Mensaje base
-            error: error.message // Info complementaria del error
-        }); // Cierra flujo de error
-    } // Fin del bloque catch
-} // Fin de obtenerUsuariosDeTarea
-
-export async function removerUsuarioDeTarea(req, res) { // Función para quitar a un usuario de su asignación en una tarea
-    try { // Iniciar proceso de remoción
-        let { taskId, userId } = req.params; // Extrae tanto el ID de la tarea como el del usuario de la URL
-        await removerUsuario(taskId, userId); // Pide al modelo romper la vinculación entre ambos parámetros
-        res.status(200).json({ // Confirmación de remoción completada
-            mensaje: `Usuario ${userId} removido de la tarea ${taskId} con éxito` // Mensaje de éxito claro
-        }); // Fin de respuesta
-    } catch (error) { // Manejo de fallos al desvincular
-        res.status(500).json({ // Respuesta fallida 500
-            mensaje: "Error en el servidor", // Aviso genérico
-            error: error.message // Info técnica
-        }); // Cierra el bloque de error
-    } // Fin del bloque catch
-} // Fin de removerUsuarioDeTarea
 
 export async function filtrarTareas(req, res) { // Función para buscar tareas aplicando múltiples filtros dinámicos (estado, prioridad, etc.)
     try { // Ejecución de búsqueda filtrada

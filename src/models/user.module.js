@@ -3,12 +3,12 @@ import { obtenerTareasPorUsuario as obtenerTareasDesdeModeloTareas } from './tas
 
 // Función asíncrona para registrar un nuevo usuario en la base de datos MySQL
 export async function crear(datos) {
-    const { nombre, email, documento, rol, estado } = datos; // Desestructura los campos necesarios de los datos de entrada
+    const { nombre, email, documento, rol, estado } = datos; // Desestructura los campos necesarios
     const [result] = await pool.query( // Ejecuta el INSERT en la tabla 'users'
         'INSERT INTO users (nombre, email, documento, rol, estado) VALUES (?, ?, ?, ?, ?)',
-        [nombre, email, documento, rol || "user", estado || "active"] // Usa valores por defecto si no se proporcionan
+        [nombre, email, documento, rol || "user", estado || "activo"] // Usa "activo" como default según el nuevo esquema
     );
-    return { id: result.insertId, ...datos }; // Retorna el objeto del usuario incluyendo el ID generado automáticamente
+    return { id: result.insertId, ...datos }; // Retorna el objeto del usuario incluyendo el ID generado
 }
 
 // Función asíncrona para obtener el listado completo de usuarios
@@ -36,22 +36,22 @@ export async function actualizar(id, datos) {
         'UPDATE users SET nombre=?, email=?, documento=? WHERE id=?',
         [nombre, email, documento, id]
     );
-    return obtenerPorId(id); // Retorna el usuario actualizado consultándolo de nuevo
+    return obtenerPorId(id); // Retorna el usuario actualizado
 }
 
-// Función asíncrona dedicada a cambiar el estado de un usuario (activo/inactivo)
+// Función asíncrona dedicada a cambiar el estado de un usuario
 export async function actualizarEstado(id, estado) {
-    await pool.query('UPDATE users SET estado=? WHERE id=?', [estado, id]); // Realiza el cambio de estado mediante UPDATE
-    return obtenerPorId(id); // Retorna el usuario con el nuevo estado reflejado
+    await pool.query('UPDATE users SET estado=? WHERE id=?', [estado, id]); // Realiza el cambio de estado
+    return obtenerPorId(id); // Retorna el usuario con el nuevo estado
 }
 
-// Función asíncrona para eliminar definitivamente a un usuario del sistema
+// Función asíncrona para eliminar definitivamente a un usuario
 export async function eliminar(id) {
-    const [result] = await pool.query('DELETE FROM users WHERE id=?', [id]); // Ejecuta el DELETE para borrar el registro
-    return result.affectedRows > 0; // Retorna verdadero si se borró al menos una fila, falso en caso contrario
+    const [result] = await pool.query('DELETE FROM users WHERE id=?', [id]); // Ejecuta el DELETE
+    return result.affectedRows > 0; // Retorna verdadero si se borró al menos una fila
 }
 
-// Función asíncrona puente para consultar las tareas vinculadas a un usuario específico
+// Función asíncrona puente para consultar las tareas vinculadas a un usuario
 export async function obtenerTareasPorUsuario(usuarioId) {
-    return await obtenerTareasDesdeModeloTareas(usuarioId); // Llama a la lógica de tareas para obtener las asignaciones
+    return await obtenerTareasDesdeModeloTareas(usuarioId); // Llama a la lógica de tareas
 }

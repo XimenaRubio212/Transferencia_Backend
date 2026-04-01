@@ -28,7 +28,7 @@ El proyecto sigue una arquitectura de capas clara:
   - **Body esperado:** `{ "nombre": "Juan", "email": "juan@mail.com", "rol": "user" }`
 - `GET /api/users/:id`: Obtiene un usuario por su ID.
 - `PUT /api/users/:id`: Actualiza los datos de un usuario.
-  - **Body esperado:** `{ "nombre": "Juan Perez" }`
+  - **Body esperado:** `{ "nombre": "Juan Perez", "email": "juan@mail.com", "documento": "123" }`
 - `DELETE /api/users/:id`: Elimina un usuario.
 - `PATCH /api/users/:id/status`: Cambia el estado (activo/inactivo) de un usuario.
   - **Body esperado:** `{ "estado": "inactive" }`

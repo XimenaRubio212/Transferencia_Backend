@@ -11,6 +11,21 @@ import {
 export async function crearTarea(req, res) { // Función para crear una nueva tarea en el sistema
     try { // Bloque para capturar errores durante la creación
         let datos = req.body; // Obtiene la información de la tarea desde el cuerpo de la solicitud
+
+        // Si viene un array de userIds, crea una tarea por cada usuario seleccionado
+        if (datos.userIds && datos.userIds.length > 0) {
+            const tareas = [];
+            for (const userId of datos.userIds) {
+                const tarea = await crear({ ...datos, userId });
+                tareas.push(tarea);
+            }
+            return res.status(201).json({
+                mensaje: `${tareas.length} tareas creadas con éxito`,
+                data: tareas
+            });
+        }
+
+        // Si no hay userIds, crea una sola tarea normal
         let resultado = await crear(datos); // Llama al modelo para guardar la nueva tarea
         res.status(201).json({ // Responde con éxito (creado) y los datos de la tarea
             mensaje: "Tarea creada con éxito", // Confirmación para el usuario

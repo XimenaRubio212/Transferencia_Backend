@@ -153,7 +153,7 @@ export async function actualizarEstadoUsuario(req, res) { // Función para activ
         let id = req.params.id; // Lee el ID del usuario de la URL
         let { estado } = req.body; // Toma el nuevo estado del cuerpo del JSON enviado
 
-        let estadosPermitidos = ["active", "inactive"]; // Solo se permiten estos dos estados lógicos
+        let estadosPermitidos = ["activo", "inactivo"]; // Solo se permiten estos dos estados lógicos
         if (!estado || !estadosPermitidos.includes(estado)) { // Valida que se envíe un estado y que este sea válido
             return res.status(400).json({ // Error 400 por estado mal especificado o ausente
                 mensaje: `El campo 'estado' es obligatorio y debe ser: ${estadosPermitidos.join(" o ")}` // Instrucción correctiva
@@ -169,7 +169,7 @@ export async function actualizarEstadoUsuario(req, res) { // Función para activ
         } // Fin de comprobación de existencia
 
         res.status(200).json({ // Respuesta de éxito si el estado cambió correctamente
-            mensaje: `Usuario ${estado === "active" ? "activado" : "desactivado"} con éxito`, // Mensaje dinámico según el nuevo estado
+            mensaje: `Usuario ${estado === "activo" ? "activado" : "desactivado"} con éxito`, // Mensaje dinámico según el nuevo estado
             data: resultado // Muestra los datos actualizados del usuario
         }); // Fin de flujo exitoso
     } catch (error) { // Gestión de fallos inesperados
